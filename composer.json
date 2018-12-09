@@ -1,0 +1,14 @@
+{
+  "name": "neoan3-apps/session",
+  "description": "neoan3 session class",
+  "version": "0.0.1",
+  "require": {
+    "neoan3-apps/db": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "Neoan3\\Apps\\": "./"
+    }
+
+  }
+}
