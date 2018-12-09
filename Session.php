@@ -1,11 +1,5 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Stefan
- * Date: 12/9/2018
- * Time: 12:04 PM
- * @property layout uni
- */
+
 namespace Neoan3\Apps;
 use Neoan3\Apps\Db;
 
@@ -47,7 +41,7 @@ class Session {
             echo json_encode(array('error'=>'login'));
             die();
         }
-        $adm = db::ask('?user',array('id'),array('id'=>$_SESSION['logged_id'], 'user_type'=>'admin', 'label_id'=>$label_id, 'delete_date'=>''));
+        $adm = Db::ask('?user',array('id'),array('id'=>$_SESSION['logged_id'], 'user_type'=>'admin', 'label_id'=>$label_id, 'delete_date'=>''));
         if(empty($adm)){
             echo json_encode(array('error'=>'permission'));
             die();
@@ -62,7 +56,7 @@ class Session {
             redirect(default_ctrl);
             exit();
         }
-        $adm = db::ask('?user',array('id'),array('id'=>$_SESSION['logged_id'], 'user_type'=>'admin', 'delete_date'=>''));
+        $adm = Db::ask('?user',array('id'),array('id'=>$_SESSION['logged_id'], 'user_type'=>'admin', 'delete_date'=>''));
         if(empty($adm)){
             redirect(default_ctrl);
             exit();
