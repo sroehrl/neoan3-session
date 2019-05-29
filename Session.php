@@ -1,7 +1,6 @@
 <?php
 
 namespace Neoan3\Apps;
-use Neoan3\Apps\Db;
 
 /**
  * Class Session
@@ -12,7 +11,7 @@ class Session {
      * Session constructor.
      */
     function __construct() {
-        if(!isset($_SESSION) || !($_SESSION) || empty($_SESSION)) {
+        if(session_status() == PHP_SESSION_NONE) {
             session_start();
         }
     }
@@ -36,14 +35,20 @@ class Session {
     /**
      * @param $label_id
      */
-    static function api_admin_restricted($label_id){
+    static function api_admin_restricted($label_id=false){
         if (!isset($_SESSION['logged_id'])){
             echo json_encode(array('error'=>'login'));
             die();
         }
-        $adm = Db::ask('?user',array('id'),array('id'=>$_SESSION['logged_id'], 'user_type'=>'admin', 'label_id'=>$label_id, 'delete_date'=>''));
-        if(empty($adm)){
-            echo json_encode(array('error'=>'permission'));
+        $proceed = true;
+        if($_SESSION['user']['user_type']!== 'admin'){
+            $proceed = false;
+        }
+        if($label_id && $_SESSION['user']['label_id']!== $label_id){
+            $proceed = false;
+        }
+        if(!$proceed){
+            echo json_encode(array('error'=>'access denied'));
             die();
         }
     }
@@ -56,8 +61,7 @@ class Session {
             redirect(default_ctrl);
             exit();
         }
-        $adm = Db::ask('?user',array('id'),array('id'=>$_SESSION['logged_id'], 'user_type'=>'admin', 'delete_date'=>''));
-        if(empty($adm)){
+        if($_SESSION['user']['user_type']!== 'admin'){
             redirect(default_ctrl);
             exit();
         }

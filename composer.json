@@ -3,7 +3,6 @@
   "description": "neoan3 session class",
   "version": "0.0.1",
   "require": {
-    "neoan3-apps/db": "dev-master",
     "ext-json": "*"
   },
   "autoload": {
