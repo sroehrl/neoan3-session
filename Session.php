@@ -83,7 +83,7 @@ class Session {
     static function restricted($role = false) {
 
         if(!isset($_SESSION['logged_id'])) {
-            $redirect = $_SERVER['HTTPS'] == 80 ? 'https://' : 'http://';
+            $redirect = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 80 ? 'https://' : 'http://';
             $redirect .= $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
             setcookie('redirect', $redirect, time() + 60 * 4, '/');
