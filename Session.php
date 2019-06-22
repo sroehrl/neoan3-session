@@ -4,7 +4,6 @@ namespace Neoan3\Apps;
 
 /**
  * Class Session
- *
  * @package Neoan3\Apps
  */
 class Session {
@@ -12,7 +11,7 @@ class Session {
      * Session constructor.
      */
     function __construct() {
-        if(session_status() == PHP_SESSION_NONE) {
+        if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
     }
@@ -23,10 +22,10 @@ class Session {
      * @return mixed
      */
     static function api_restricted($role = false) {
-        if(!isset($_SESSION['logged_id'])) {
+        if (!isset($_SESSION['logged_id'])) {
             echo json_encode(['error' => 'login']);
             die();
-        } elseif($role && self::roleCheck($role)) {
+        } elseif ($role && self::roleCheck($role)) {
             echo json_encode(['error' => 'permission denied']);
             die();
         }
@@ -38,18 +37,18 @@ class Session {
      * @param $label_id
      */
     static function api_admin_restricted($label_id = false) {
-        if(!isset($_SESSION['logged_id'])) {
+        if (!isset($_SESSION['logged_id'])) {
             echo json_encode(['error' => 'login']);
             die();
         }
         $proceed = true;
-        if($_SESSION['user']['user_type'] !== 'admin') {
+        if ($_SESSION['user']['user_type'] !== 'admin') {
             $proceed = false;
         }
-        if($label_id && $_SESSION['user']['label_id'] !== $label_id) {
+        if ($label_id && $_SESSION['user']['label_id'] !== $label_id) {
             $proceed = false;
         }
-        if(!$proceed) {
+        if (!$proceed) {
             echo json_encode(['error' => 'access denied']);
             die();
         }
@@ -59,11 +58,11 @@ class Session {
      *
      */
     static function admin_restricted() {
-        if(!isset($_SESSION['logged_id'])) {
+        if (!isset($_SESSION['logged_id'])) {
             redirect(default_ctrl);
             exit();
         }
-        if($_SESSION['user']['user_type'] !== 'admin') {
+        if ($_SESSION['user']['user_type'] !== 'admin') {
             redirect(default_ctrl);
             exit();
         }
@@ -82,15 +81,15 @@ class Session {
      */
     static function restricted($role = false) {
 
-        if(!isset($_SESSION['logged_id'])) {
+        if (!isset($_SESSION['logged_id'])) {
             $redirect = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 80 ? 'https://' : 'http://';
             $redirect .= $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
             setcookie('redirect', $redirect, time() + 60 * 4, '/');
             redirect(default_ctrl);
             exit();
-        } elseif($role) {
-            if(self::roleCheck($role)) {
+        } elseif ($role) {
+            if (self::roleCheck($role)) {
                 echo 'You do not have required permissions to enter this page.';
                 die();
             }
@@ -102,7 +101,7 @@ class Session {
      *
      */
     static function confirmed_restricted() {
-        if(!isset($_SESSION['logged_id']) || empty($_SESSION['user']['user_email']['confirm_date'])) {
+        if (!isset($_SESSION['logged_id']) || empty($_SESSION['user']['user_email']['confirm_date'])) {
             redirect('start');
             exit();
         }
@@ -112,7 +111,7 @@ class Session {
      * @return bool
      */
     static function is_logged_in() {
-        if(!isset($_SESSION['logged_id'])) {
+        if (!isset($_SESSION['logged_id'])) {
             return false;
         } else {
             return true;
@@ -121,15 +120,16 @@ class Session {
     }
 
     /**
-     * @param $user_id
+     * @param        $user_id
+     * @param array  $roles
+     * @param string $userType
      */
-    static function login($user_id) {
+    static function login($user_id, $roles = [], $userType = 'user') {
         //create SESSION
         $_SESSION['logged_id'] = $user_id;
         $template = [
-            'user'       => ['id' => $user_id, 'user_type' => 'user'],
-            'roles'      => [],
-            'user_email' => ['confirm_date' => null]
+            'user' => ['id' => $user_id, 'user_type' => $userType],
+            'roles' => $roles
         ];
         self::add_session($template);
     }
@@ -138,7 +138,7 @@ class Session {
      * @param $array
      */
     static function add_session($array) {
-        foreach($array as $key => $value) {
+        foreach ($array as $key => $value) {
             $_SESSION[$key] = $value;
         }
     }
@@ -162,14 +162,14 @@ class Session {
      */
     private static function roleCheck($role) {
         $block = true;
-        foreach($_SESSION['user']['roles'] as $user_role) {
-            if(is_array($role)) {
-                foreach($role as $sRole) {
-                    if($user_role['role'] == $sRole) {
+        foreach ($_SESSION['user']['roles'] as $user_role) {
+            if (is_array($role)) {
+                foreach ($role as $sRole) {
+                    if ($user_role['role'] == $sRole) {
                         $block = false;
                     }
                 }
-            } elseif($user_role['role'] == $role) {
+            } elseif ($user_role['role'] == $role) {
                 $block = false;
             }
         }
