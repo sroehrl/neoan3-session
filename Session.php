@@ -6,11 +6,13 @@ namespace Neoan3\Apps;
  * Class Session
  * @package Neoan3\Apps
  */
-class Session {
+class Session
+{
     /**
      * Session constructor.
      */
-    function __construct() {
+    function __construct()
+    {
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
@@ -21,7 +23,8 @@ class Session {
      *
      * @return mixed
      */
-    static function api_restricted($role = false) {
+    static function api_restricted($role = false)
+    {
         if (!isset($_SESSION['logged_id'])) {
             echo json_encode(['error' => 'login']);
             die();
@@ -36,7 +39,8 @@ class Session {
     /**
      * @param $label_id
      */
-    static function api_admin_restricted($label_id = false) {
+    static function api_admin_restricted($label_id = false)
+    {
         if (!isset($_SESSION['logged_id'])) {
             echo json_encode(['error' => 'login']);
             die();
@@ -57,7 +61,8 @@ class Session {
     /**
      *
      */
-    static function admin_restricted() {
+    static function admin_restricted()
+    {
         if (!isset($_SESSION['logged_id'])) {
             redirect(default_ctrl);
             exit();
@@ -72,14 +77,16 @@ class Session {
     /**
      * @return mixed
      */
-    static function user_id() {
+    static function user_id()
+    {
         return $_SESSION['logged_id'];
     }
 
     /**
      * @param bool $role
      */
-    static function restricted($role = false) {
+    static function restricted($role = false)
+    {
 
         if (!isset($_SESSION['logged_id'])) {
             $redirect = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 80 ? 'https://' : 'http://';
@@ -100,7 +107,8 @@ class Session {
     /**
      *
      */
-    static function confirmed_restricted() {
+    static function confirmed_restricted()
+    {
         if (!isset($_SESSION['logged_id']) || empty($_SESSION['user']['user_email']['confirm_date'])) {
             redirect('start');
             exit();
@@ -110,7 +118,8 @@ class Session {
     /**
      * @return bool
      */
-    static function is_logged_in() {
+    static function is_logged_in()
+    {
         if (!isset($_SESSION['logged_id'])) {
             return false;
         } else {
@@ -124,7 +133,8 @@ class Session {
      * @param array  $roles
      * @param string $userType
      */
-    static function login($user_id, $roles = [], $userType = 'user') {
+    static function login($user_id, $roles = [], $userType = 'user')
+    {
         //create SESSION
         $_SESSION['logged_id'] = $user_id;
         $template = [
@@ -137,7 +147,8 @@ class Session {
     /**
      * @param $array
      */
-    static function add_session($array) {
+    static function add_session($array)
+    {
         foreach ($array as $key => $value) {
             $_SESSION[$key] = $value;
         }
@@ -146,7 +157,8 @@ class Session {
     /**
      *
      */
-    static function logout() {
+    static function logout()
+    {
 
         //destroy session
         unset($_SESSION['logged_id']);
@@ -160,7 +172,8 @@ class Session {
      *
      * @return bool
      */
-    private static function roleCheck($role) {
+    private static function roleCheck($role)
+    {
         $block = true;
         foreach ($_SESSION['user']['roles'] as $user_role) {
             if (is_array($role)) {
