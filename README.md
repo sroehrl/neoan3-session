@@ -4,7 +4,7 @@ This class handles basic PHP-session requirements and is designed to play nicely
 
 
 ## Installation
-`composer require neoan3-apps/db`
+`composer require neoan3-apps/session`
 
 ## Usage
 
