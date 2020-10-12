@@ -2,123 +2,64 @@
 
 namespace Neoan3\Apps;
 
+use Exception;
+
 /**
  * Class Session
  * @package Neoan3\Apps
  */
 class Session
 {
+    private static string $prefix;
+    private static int $expireInSeconds;
     /**
      * Session constructor.
+     * @param string $prefix
+     * @param int $expireInSeconds
      */
-    function __construct()
+    function __construct($prefix = 'neoan3-', $expireInSeconds = 1800)
     {
+
+        self::$expireInSeconds = $expireInSeconds;
+        self::$prefix = $prefix;
         if (session_status() == PHP_SESSION_NONE) {
+            ini_set('session.use_strict_mode', 1);
             session_start();
         }
-    }
-
-    /**
-     * @param bool $role
-     *
-     * @return mixed
-     */
-    static function api_restricted($role = false)
-    {
-        if (!isset($_SESSION['logged_id'])) {
-            echo json_encode(['error' => 'login']);
-            die();
-        } elseif ($role && self::roleCheck($role)) {
-            echo json_encode(['error' => 'permission denied']);
-            die();
-        }
-        $_SESSION['idle'] = 0;
-        return $_SESSION['logged_id'];
-    }
-
-    /**
-     * @param $label_id
-     */
-    static function api_admin_restricted($label_id = false)
-    {
-        if (!isset($_SESSION['logged_id'])) {
-            echo json_encode(['error' => 'login']);
-            die();
-        }
-        $proceed = true;
-        if ($_SESSION['user']['user_type'] !== 'admin') {
-            $proceed = false;
-        }
-        if ($label_id && $_SESSION['user']['label_id'] !== $label_id) {
-            $proceed = false;
-        }
-        if (!$proceed) {
-            echo json_encode(['error' => 'access denied']);
-            die();
+        if(self::isLoggedIn() && !self::status()){
+            // expired
+            self::logout();
         }
     }
 
-    /**
-     *
-     */
-    static function admin_restricted()
-    {
-        if (!isset($_SESSION['logged_id'])) {
-            redirect(default_ctrl);
-            exit();
-        }
-        if ($_SESSION['user']['user_type'] !== 'admin') {
-            redirect(default_ctrl);
-            exit();
-        }
-
-    }
 
     /**
      * @return mixed
      */
-    static function user_id()
+    static function userId()
     {
         return $_SESSION['logged_id'];
     }
 
     /**
-     * @param bool $role
+     * @param ?array $scope
+     * @return array
+     * @throws Exception
      */
-    static function restricted($role = false)
+    static function restrict(array $scope = null)
     {
-
-        if (!isset($_SESSION['logged_id'])) {
-            $redirect = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 80 ? 'https://' : 'http://';
-            $redirect .= $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-
-            setcookie('redirect', $redirect, time() + 60 * 4, '/');
-            redirect(default_ctrl);
-            exit();
-        } elseif ($role) {
-            if (self::roleCheck($role)) {
-                echo 'You do not have required permissions to enter this page.';
-                die();
-            }
+        if(!self::status() || !self::scopeCheck($scope)){
+            throw new Exception('Not allowed');
         }
-
+        return self::getUserSession();
     }
 
-    /**
-     *
-     */
-    static function confirmed_restricted()
-    {
-        if (!isset($_SESSION['logged_id']) || empty($_SESSION['user']['user_email']['confirm_date'])) {
-            redirect('start');
-            exit();
-        }
-    }
+
 
     /**
      * @return bool
      */
-    static function is_logged_in()
+    static function isLoggedIn()
     {
         if (!isset($_SESSION['logged_id'])) {
             return false;
@@ -130,24 +71,35 @@ class Session
 
     /**
      * @param        $user_id
-     * @param array  $roles
+     * @param array  $scope
      * @param string $userType
      */
-    static function login($user_id, $roles = [], $userType = 'user')
+    static function login($user_id, array $scope = [], $userType = 'user')
     {
         //create SESSION
+        $sessionId = session_create_id(self::$prefix);
+        session_commit();
+        session_id($sessionId);
+        session_start();
         $_SESSION['logged_id'] = $user_id;
+        $_SESSION['expires'] = time() + self::$expireInSeconds;
         $template = [
             'user' => ['id' => $user_id, 'user_type' => $userType],
-            'roles' => $roles
+            'scope' => $scope,
+            'payload' => []
         ];
-        self::add_session($template);
+        self::addToSession($template);
+    }
+
+    static function getUserSession()
+    {
+        return $_SESSION;
     }
 
     /**
      * @param $array
      */
-    static function add_session($array)
+    static function addToSession($array)
     {
         foreach ($array as $key => $value) {
             $_SESSION[$key] = $value;
@@ -159,33 +111,46 @@ class Session
      */
     static function logout()
     {
-
         //destroy session
-        unset($_SESSION['logged_id']);
-        session_unset();
-        session_destroy();
-        session_write_close();
+        if(isset($_SESSION['logged_id'])){
+            unset($_SESSION['logged_id']);
+        }
+        @session_unset();
+        @session_destroy();
+        @session_write_close();
+
+    }
+
+    static function status():bool
+    {
+        $now = time();
+        return self::isLoggedIn() && $now < $_SESSION['expires'];
     }
 
     /**
-     * @param $role
+     * @param ?string|array $roles
      *
      * @return bool
      */
-    private static function roleCheck($role)
+    static function scopeCheck($roles = null)
     {
-        $block = true;
-        foreach ($_SESSION['user']['roles'] as $user_role) {
-            if (is_array($role)) {
-                foreach ($role as $sRole) {
-                    if ($user_role['role'] == $sRole) {
-                        $block = false;
+        $allow = true;
+        if($roles){
+            $allow = false;
+            foreach ($_SESSION['scope'] as $user_scope) {
+                if (is_array($roles)) {
+                    foreach ($roles as $sRole) {
+                        if ($user_scope == $sRole) {
+                            $allow = true;
+                        }
                     }
+                } elseif ($user_scope == $roles) {
+                    $allow = true;
                 }
-            } elseif ($user_role['role'] == $role) {
-                $block = false;
             }
         }
-        return $block;
+
+        return $allow;
     }
+
 }

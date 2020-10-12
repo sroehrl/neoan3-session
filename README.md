@@ -6,17 +6,25 @@ This class handles basic PHP-session requirements and is designed to play nicely
 ## Installation
 `composer require neoan3-apps/session`
 
+## Implementation
+
+Create a new Session as early as possible in your code with:
+
+`new \Neoan3\Apps\Session();`
+
+In a neoan3 installation, 
+
 ## Usage
 
-`Session::login($userId)`
+`Session::login($userId [,$scope=[], $payload =[]])`
 
 Registers a user with the following template
 
 ```PHP
 [
-    'user'       => ['id' => $user_id, 'user_type' => 'user'],
-    'roles'      => [],
-    'user_email' => ['confirm_date' => null]
+    'user' => ['id' => $userId, 'user_type' => 'user'],
+    'scope' => $scope,
+    'payload' => $payload
 ];
 ```
 
@@ -24,22 +32,16 @@ Registers a user with the following template
 
 Terminates all session variables
 
-`Session::add_session($array)`
+`Session::addToSession($array)`
 
-Adds multiple variables using an associative array.
+Adds multiple variables to payload using an associative array.
 
-`Session::restricted($array||$string||void)`
+`Session::restrict($array||$string||null)`
 
 Checks if user is logged in and (if parameter is set) whether the user belongs to 
 - ONE OF the roles in the given array
 - The role of the given string
 
-and redirects to the default page (home?) if condition is not met.
+and throws an exception is the condition is not met
 
-`Session::api_restricted($array||$string||void)`
-
-Same as restricted, but echoes the JSON
-```JSON
-{"error":"permission_denied"}
-```
-and ends execution.
+`
