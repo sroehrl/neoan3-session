@@ -1,7 +1,7 @@
 {
   "name": "neoan3-apps/session",
   "description": "neoan3 session class",
-  "version": "0.0.9",
+  "version": "1.0.0",
   "require": {
     "ext-json": "*"
   },

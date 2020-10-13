@@ -56,9 +56,10 @@ class SessionOOP  implements SessionAuthCopy
         }
         return $this->validate();
     }
-    public function logout(): void
+    public function logout(): bool
     {
         Session::logout();
+        return true;
     }
 
 }
